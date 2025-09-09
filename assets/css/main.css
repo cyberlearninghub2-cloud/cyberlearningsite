@@ -3483,18 +3483,20 @@ body {
 
   /* ========== HEADER MOBILE ========== */
   #main-header {
-    padding: 12px 15px;
-    flex-wrap: wrap;
+    padding: 15px;
     min-height: 65px;
-    position: fixed;
-    top: 0;
-    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* This will help space out the top row */
+    flex-wrap: wrap; /* CRITICAL: Allows items to wrap to the next line */
+    row-gap: 10px; /* Adds space between the top and bottom rows when wrapped */
   }
 
   #main-header .logo {
     font-size: 1.3rem;
-    flex: 1;
+    /* The logo stays on the left by default */
   }
+  
 
   /* Mobile navigation */
   #main-header nav {
