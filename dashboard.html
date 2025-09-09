@@ -415,7 +415,7 @@
         "> Loading user interface...",
         "> System ready!",
       ];
-      const cacheKey = `ach_progress_${achievement.id}_${currentUser.id}`;
+
       const achievements = [
         // Getting Started (Common)
         {
@@ -4387,7 +4387,7 @@
       // Add efficient progress calculation:
            async function calculateAchievementProgress(achievement) {
         // REMOVED: The faulty caching that was storing stale "0" values has been removed.
-        
+        const cacheKey = `ach_progress_${achievement.id}_${currentUser.id}`;
         const progress = {
           current: 0,
           required: achievement.requirement.value,
@@ -4408,7 +4408,7 @@
                 .select("course_id", { count: 'exact', head: true })
                 .eq("user_id", currentUser.id)
                 .gt("progress", 0);
-              progress.current = startedCourses.count || 0;
+              progress.current = startedCourses?.count || 0;
               break;
             case "lessons_completed":
               const { data: lessonsData } = await supabase
