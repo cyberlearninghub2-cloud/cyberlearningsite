@@ -37,12 +37,6 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-  <url>
-    <loc>https://www.cipherhall.com/thanks.html</loc>
-    <lastmod>2025-09-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
 
   <url>
     <loc>https://www.cipherhall.com/courses/ethical-hacking-fundamentals.html</loc>
@@ -754,4 +748,5 @@
     <priority>0.7</priority>
   </url>
   
+
 </urlset>
