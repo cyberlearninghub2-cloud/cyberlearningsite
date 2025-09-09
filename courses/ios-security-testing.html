@@ -3266,11 +3266,11 @@
 
           // Update counter
           await supabase
-            .from("profiles")
-            .update({
-              [counterType]: supabase.sql`${counterType} + 1`,
-            })
-            .eq("id", currentUser.id);
+      await supabase.rpc('increment_profile_counter', {
+  user_id_param: currentUser.id,
+  counter_field: counterType,
+  increment_value: 1
+});
 
           // Cache to prevent double counting
           sessionStorage.setItem(cacheKey, "true");
