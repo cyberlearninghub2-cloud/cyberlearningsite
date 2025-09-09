@@ -4310,10 +4310,6 @@ body {
   }
 
   /* Reduce animation complexity for better performance */
-  .glitch::before,
-  .glitch::after {
-    display: none;
-  }
 
   .intro-glow-pulse,
   .intro-badge-glow,
