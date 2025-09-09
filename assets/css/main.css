@@ -4985,3 +4985,25 @@ body {
     margin-bottom: 0;
   }
 }
+
+
+/* ========== MOBILE & TABLET OPTIMIZATIONS ========== */
+@media screen and (max-width: 768px) {
+
+  /* Show the mobile menu (hamburger) button */
+  .mobile-menu-toggle {
+    display: block; 
+    margin-left: 5px;
+    margin-right: 5px; /* Space between login and menu button */
+  }
+}
+
+/* Fine-tuning for very small screens if needed */
+@media screen and (max-width: 520px) {
+    .music-dropdown .btn span {
+        display: none; /* Hide "STUDY MUSIC" text, show only icon */
+    }
+    .music-dropdown .btn i {
+        margin-right: 0;
+    }
+}
