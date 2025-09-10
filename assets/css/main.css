@@ -3566,13 +3566,14 @@ body {
   }
 
   /* Music dropdown mobile */
-.music-dropdown-content {
+  .music-dropdown-content {
   left:2px;
     min-width: 200px;
     max-height: 250px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+
   /* ========== HERO SECTION MOBILE ========== */
   #hero {
     height: 100vh;
@@ -5008,4 +5009,3 @@ body {
         margin-right: 0;
     }
 }
-
