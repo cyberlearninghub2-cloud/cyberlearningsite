@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
   <url>
-    <loc>https://www.cipherhall.com/index</loc>
+    <loc>https://www.cipherhall.com/</loc>
     <lastmod>2025-09-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -25,7 +25,6 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-
   <url>
     <loc>https://www.cipherhall.com/courses/ethical-hacking-fundamentals</loc>
     <lastmod>2025-09-07</lastmod>
@@ -374,22 +373,19 @@
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-
   <url>
     <loc>https://www.cipherhall.com/courses/preview/web-application-security</loc>
     <lastmod>2025-09-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-  
-  <url?>
+  <url>
     <loc>https://www.cipherhall.com/courses/advanced-exploit-development</loc>
     <lastmod>2025-09-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
-    </url>
-    
-    <url>
+  </url>
+  <url>
     <loc>https://www.cipherhall.com/courses/advanced-firewalling</loc>
     <lastmod>2025-09-07</lastmod>
     <changefreq>monthly</changefreq>
