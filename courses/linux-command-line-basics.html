@@ -24,7 +24,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="shortcut icon" href="/favicon.png" type="image/x-icon" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
-    <link rel="canonical" href="https://www.cipherhall.com/courses/linux-command-line-basics.html" />
+    <link rel="canonical" href="https://www.cipherhall.com/courses/linux-command-line-basics" />
 
     <script type="application/ld+json">
     {
@@ -144,7 +144,7 @@
                         <span id="totalLessons">0</span>
                     </div>
                 </div>
-                <a href="/dashboard.html" class="back-to-dashboard">
+                <a href="/dashboard" class="back-to-dashboard">
                     <i class="fas fa-arrow-left"></i>
                     Back to Dashboard
                 </a>
@@ -2737,7 +2737,7 @@ async function completeCourse() {
         
         // Redirect to dashboard after delay
         setTimeout(() => {
-            window.location.href = '/dashboard.html';
+            window.location.href = '/dashboard';
         }, 3000);
         
     } catch (error) {
@@ -3610,7 +3610,7 @@ if (googleBtn) {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-                redirectTo: window.location.origin + "/courses/linux-command-line-basics.html",
+                redirectTo: window.location.origin + "/courses/linux-command-line-basics",
             },
         });
 

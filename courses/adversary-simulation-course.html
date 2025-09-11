@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="shortcut icon" href="/favicon.png" type="image/x-icon" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
-    <link rel="canonical" href="https://www.cipherhall.com/courses/adversary-simulation-course.html" />
+    <link rel="canonical" href="https://www.cipherhall.com/courses/adversary-simulation-course" />
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -212,7 +212,7 @@
               <span id="totalLessons">0</span>
             </div>
           </div>
-          <a href="/dashboard.html" class="back-to-dashboard">
+          <a href="/dashboard" class="back-to-dashboard">
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
           </a>
@@ -716,7 +716,7 @@
             },
             "codeExamples": [
                 {
-                    "title": "GoPhish_Email_Template_with_Credential_Link.html",
+                    "title": "GoPhish_Email_Template_with_Credential_Link",
                     "language": "html",
                     "code": "<html>\n<body>\n  <p>Hello {{.FirstName}},</p>\n  <p>Your mailbox is almost full. To prevent a disruption of service, please log in to the Outlook Web App portal to increase your storage quota immediately.</p>\n  \n  <!-- The 'rid' parameter is a unique ID for tracking the user -->\n  <p><a href=\"https://login.microsft.corp-site.com/?rid={{.RId}}\">Click here to log in</a></p>\n\n  <p>Thank you,</p>\n  <p>IT Support</p>\n</body>\n</html>"
                 }
@@ -3744,7 +3744,7 @@
 
           // Redirect to dashboard after delay
           setTimeout(() => {
-            window.location.href = "/dashboard.html";
+            window.location.href = "/dashboard";
           }, 3000);
         } catch (error) {
           console.error("Error completing course:", error);
@@ -4683,7 +4683,7 @@ await supabase.rpc('increment_user_stats', {
           const { data, error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-              redirectTo: window.location.origin + "/courses/adversary-simulation-course.html",
+              redirectTo: window.location.origin + "/courses/adversary-simulation-course",
             },
           });
 

@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="shortcut icon" href="/favicon.png" type="image/x-icon" />
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
-    <link rel="canonical" href="https://www.cipherhall.com/courses/blockchain-security.html" />
+    <link rel="canonical" href="https://www.cipherhall.com/courses/blockchain-security" />
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -212,7 +212,7 @@
               <span id="totalLessons">0</span>
             </div>
           </div>
-          <a href="/dashboard.html" class="back-to-dashboard">
+          <a href="/dashboard" class="back-to-dashboard">
             <i class="fas fa-arrow-left"></i>
             Back to Dashboard
           </a>
@@ -5215,7 +5215,7 @@ const COURSE_DATA =
 
           // Redirect to dashboard after delay
           setTimeout(() => {
-            window.location.href = "/dashboard.html";
+            window.location.href = "/dashboard";
           }, 3000);
         } catch (error) {
           console.error("Error completing course:", error);
@@ -6157,7 +6157,7 @@ await supabase.rpc('increment_user_stats', {
           const { data, error } = await supabase.auth.signInWithOAuth({
             provider: "google",
             options: {
-              redirectTo: window.location.origin + "/courses/blockchain-security.html",
+              redirectTo: window.location.origin + "/courses/blockchain-security",
             },
           });
 
