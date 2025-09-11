@@ -11,6 +11,10 @@ Disallow: /private/
 Disallow: /sensitive_data/
 Disallow: /api/
 Disallow: /profiles/
+Disallow: /documents/
+Disallow: /home/
+Disallow: /modules/
+Disallow: /v1/
 
 # Block search results pages to prevent infinite URLs
 Disallow: /search
