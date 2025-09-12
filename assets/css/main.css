@@ -5009,3 +5009,19 @@ body {
         margin-right: 0;
     }
 }
+/* --- Original Animation --- */
+@keyframes containerGlow {
+  0%, 100% { box-shadow: 0 0 50px rgba(0, 255, 65, 0.2); }
+  50% { box-shadow: 0 0 70px rgba(0, 255, 65, 0.35); }
+}
+
+/* --- Add this media query to disable it on mobile --- */
+@media (max-width: 768px) {
+  .ccontainer, .creator-card, .pin-manager, .intro-security-badge {
+    animation: none; /* Disables the glow animations */
+  }
+
+  .shape {
+    display: none; /* Hide the floating shapes completely */
+  }
+}
