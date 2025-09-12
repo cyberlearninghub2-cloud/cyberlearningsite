@@ -5025,3 +5025,21 @@ body {
     display: none; /* Hide the floating shapes completely */
   }
 }
+@media (max-width: 768px) {
+  .glitch::before,
+  .glitch::after,
+  .shape,
+  #hero::before {
+    display: none !important;
+  }
+  .glitch {
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
