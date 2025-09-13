@@ -1020,12 +1020,6 @@
       const supabaseUrl = "https://lzcmzulemfubjaksoqor.supabase.co";
       const supabaseKey =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6Y216dWxlbWZ1Ympha3NvcW9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzMzM5MDgsImV4cCI6MjA3MDkwOTkwOH0.crhPH4YWtRsr1BJTpAQcmPbWSpwIWRbzoI4sRb2_fPI";
-      const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-      /* ========== 1. GLOBAL STATE ========== */
-      let currentUser = null;
-      let audioPlayer = new Audio();
-
       /* ========== 2. SHORTCUTS ========== */
       const $ = (sel) => document.querySelector(sel);
       const $$ = (sel) => [...document.querySelectorAll(sel)];
@@ -1389,6 +1383,9 @@
 
       /* ========== 7. DOM READY ========== */
       document.addEventListener("DOMContentLoaded", () => {
+        let currentUser = null;
+    let audioPlayer = new Audio();
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
         initTyping();
         initTerminal();
         initScrollReveal();
