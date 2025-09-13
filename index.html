@@ -1422,10 +1422,7 @@
             handleGoogleOAuth();
           })
         );
-      });
-
-      /* ========== 8. OAuth redirect recovery ========== */
-      (async () => {
+         (async () => {
         const { data, error } = await supabaseClient.auth.getSession();
         if (error) console.error("OAuth error:", error.message);
         else if (data.session) {
@@ -1443,6 +1440,7 @@
           updateUIForLoggedInUser(data.session.user);
         }
       })();
+      });
       window.addEventListener("load", () => {
         const musicBtn = document.querySelector("#music-dropdown");
         if (musicBtn) {
