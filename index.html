@@ -1016,325 +1016,251 @@
     </div>
 
     <script>
-      /* ========== 0. SUPABASE CONFIG ========== */
-      const supabaseUrl = "https://lzcmzulemfubjaksoqor.supabase.co";
-      const supabaseKey =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6Y216dWxlbWZ1Ympha3NvcW9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzMzM5MDgsImV4cCI6MjA3MDkwOTkwOH0.crhPH4YWtRsr1BJTpAQcmPbWSpwIWRbzoI4sRb2_fPI";
-      /* ========== 2. SHORTCUTS ========== */
-      const $ = (sel) => document.querySelector(sel);
-      const $$ = (sel) => [...document.querySelectorAll(sel)];
+  /* ========== 1. GLOBAL HELPERS & CONFIG ========== */
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => [...document.querySelectorAll(sel)];
 
-      /* ========== 3. AUTH MODAL UTILS ========== */
-      function showAuthLoader(show = true) {
-        $("#authLoader") &&
-          ($("#authLoader").style.display = show ? "block" : "none");
-        $$(".modal-content > div:not(#authLoader)").forEach(
-          (el) => (el.style.display = show ? "none" : "block")
-        );
-      }
-      function showAuthMessage(msg, isError = false) {
-        const box = $("#authMessage");
-        if (!box) return;
-        box.textContent = msg;
-        box.className = isError ? "error" : "success";
-        box.style.display = "block";
-        setTimeout(() => (box.style.display = "none"), 4000);
-      }
-      function openAuthModal() {
-        $("#authModal").style.display = "flex";
-        document.body.style.overflow = "hidden";
-      }
-      function closeAuthModal() {
-        $("#authModal").style.display = "none";
-        document.body.style.overflow = "";
-        showAuthMessage("");
-      }
-      function setFinalMessage(msg, isError) {
-        $("#authModal .modal-content").innerHTML = `
-    <span class="close" onclick="closeAuthModal()">&times;</span>
-    <div style="text-align:center;padding:2rem;">
-      <i class="fas ${isError ? "fa-times-circle" : "fa-check-circle"} fa-2x"
-         style="color:${
-           isError ? "var(--color-red)" : "var(--color-green)"
-         }"></i>
-      <p style="margin-top:1rem;font-weight:600;">${msg}</p>
-    </div>`;
-        setTimeout(closeAuthModal, 2000);
-      }
+  const supabaseUrl = "https://lzcmzulemfubjaksoqor.supabase.co";
+  const supabaseKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6Y216dWxlbWZ1Ympha3NvcW9yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUzMzM5MDgsImV4cCI6MjA3MDkwOTkwOH0.crhPH4YWtRsr1BJTpAQcmPbWSpwIWRbzoI4sRb2_fPI";
 
-      /* ========== 4. AUTH HANDLERS ========== */
-      async function handleEmailSignIn(e) {
+  /* ========== 2. FUNCTION DEFINITIONS ========== */
+
+  // --- AUTH MODAL ---
+  function showAuthLoader(show = true) {
+    $("#authLoader") &&
+      ($("#authLoader").style.display = show ? "block" : "none");
+    $$(".modal-content > div:not(#authLoader):not(.close)").forEach(
+      (el) => (el.style.display = show ? "none" : "block")
+    );
+  }
+  function showAuthMessage(msg, isError = false) {
+    const box = $("#authMessage");
+    if (!box) return;
+    box.textContent = msg;
+    box.className = isError ? "error" : "success";
+    box.style.display = "block";
+    setTimeout(() => (box.style.display = "none"), 4000);
+  }
+  function openAuthModal() {
+    $("#authModal").style.display = "flex";
+    document.body.style.overflow = "hidden";
+  }
+  function closeAuthModal() {
+    $("#authModal").style.display = "none";
+    document.body.style.overflow = "";
+    showAuthMessage("");
+  }
+  function setFinalMessage(msg, isError) {
+    $("#authModal .modal-content").innerHTML = `
+      <span class="close" id="closeFinalMessage">&times;</span>
+      <div style="text-align:center;padding:2rem;">
+        <i class="fas ${isError ? "fa-times-circle" : "fa-check-circle"} fa-2x"
+           style="color:${isError ? "var(--color-red)" : "var(--color-green)"}"></i>
+        <p style="margin-top:1rem;font-weight:600;">${msg}</p>
+      </div>`;
+    $("#closeFinalMessage").addEventListener("click", closeAuthModal);
+    setTimeout(closeAuthModal, 2000);
+  }
+
+  // --- AUTH HANDLERS ---
+  async function handleEmailSignIn(e, supabaseClient) {
+    e.preventDefault();
+    showAuthLoader(true);
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: $("#signInEmail").value.trim(),
+      password: $("#signInPassword").value,
+    });
+    if (error) {
+      showAuthMessage(error.message, true);
+      showAuthLoader(false);
+      return;
+    }
+    localStorage.setItem("cybersec_user", JSON.stringify({
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.user_metadata?.full_name || data.user.email.split("@")[0],
+        loginTime: new Date().toISOString(),
+    }));
+    updateUIForLoggedInUser(data.user);
+    setFinalMessage("Signed in!", false);
+  }
+  async function handleEmailSignUp(e, supabaseClient) {
+    e.preventDefault();
+    showAuthLoader(true);
+    const name = $("#signUpName").value.trim();
+    const email = $("#signUpEmail").value.trim();
+    const password = $("#signUpPassword").value;
+    if (password.length < 6) {
+      showAuthMessage("Min 6 characters", true);
+      showAuthLoader(false);
+      return;
+    }
+    const { error: loginErr } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (!loginErr) {
+      showAuthLoader(false);
+      setFinalMessage("Account already exists. Please Sign In.", true);
+      return;
+    }
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name }, emailRedirectTo: location.origin },
+    });
+    showAuthLoader(false);
+    if (error) {
+      showAuthMessage(error.message, true);
+    } else {
+      setFinalMessage("Check your inbox for confirmation!", false);
+    }
+  }
+  async function handleGoogleOAuth(supabaseClient) {
+    showAuthLoader(true);
+    await supabaseClient.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: location.origin, redirectMode: "same-tab" },
+    });
+  }
+  async function handleSignOut(supabaseClient) {
+    await supabaseClient.auth.signOut();
+    localStorage.removeItem("cybersec_user");
+    updateUIForLoggedOutUser();
+  }
+
+  // --- UI UPDATES ---
+  function updateUIForLoggedInUser(userData) {
+    const btn = $("#loginNavBtn");
+    if (!btn) return;
+    const name = userData.name || userData.user_metadata?.full_name || userData.email.split("@")[0];
+    btn.innerHTML = `
+      <div style="position:relative;display:inline-block;">
+        <button class="btn-nav" id="userMenuBtn">
+          <i class="fas fa-user-circle"></i> ${name}
+        </button>
+        <div id="userDropdown" style="display:none;position:absolute;right:0;top:100%;background:rgba(17,17,17,.95);border:1px solid rgba(0,255,65,.2);border-radius:8px;padding:.5rem 0;min-width:150px;z-index:1000;">
+          <a href="#" id="signOutBtn" style="display:block;padding:.5rem 1rem;color:var(--color-red);text-decoration:none;">Sign Out</a>
+        </div>
+      </div>`;
+    $("#userMenuBtn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      $("#userDropdown").style.display = $("#userDropdown").style.display === "block" ? "none" : "block";
+    });
+    $("#signOutBtn").addEventListener("click", (e) => {
+      e.preventDefault();
+      const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey); // Re-create client instance for sign out
+      handleSignOut(supabaseClient);
+    });
+  }
+  function updateUIForLoggedOutUser() {
+    const btn = $("#loginNavBtn");
+    if (btn) {
+      btn.innerHTML = "Login / Signup";
+      btn.onclick = (e) => {
         e.preventDefault();
-        showAuthLoader(true);
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
-          email: $("#signInEmail").value.trim(),
-          password: $("#signInPassword").value,
-        });
-        if (error) {
-          showAuthMessage(error.message, true);
-          showAuthLoader(false);
-          return;
-        }
-        localStorage.setItem(
-          "cybersec_user",
-          JSON.stringify({
-            id: data.user.id,
-            email: data.user.email,
-            name:
-              data.user.user_metadata?.full_name ||
-              data.user.email.split("@")[0],
-            loginTime: new Date().toISOString(),
-          })
-        );
-        updateUIForLoggedInUser(data.user);
-        setFinalMessage("Signed in!", false);
-      }
-      async function handleEmailSignUp(e) {
-        e.preventDefault();
-        showAuthLoader(true);
+        openAuthModal();
+      };
+    }
+  }
 
-        const name = $("#signUpName").value.trim();
-        const email = $("#signUpEmail").value.trim();
-        const password = $("#signUpPassword").value;
-
-        if (password.length < 6) {
-          showAuthMessage("Min 6 characters", true);
-          showAuthLoader(false);
-          return;
-        }
-
-        /* 1️⃣  Try to sign in – if it succeeds, user already exists */
-        const { error: loginErr } =
-          await supabaseClient.auth.signInWithPassword({ email, password });
-        if (!loginErr) {
-          showAuthLoader(false);
-          setFinalMessage("Account already exists. Please Sign In.", true);
-          return;
-        }
-
-        /* 2️⃣  Create account – Supabase will send verification email */
-        const { data, error } = await supabaseClient.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { full_name: name },
-            emailRedirectTo: location.origin, // 🔑 makes sure email is sent
-          },
-        });
-
-        showAuthLoader(false);
-
-        if (error) {
-          showAuthMessage(error.message, true);
-        } else {
-          setFinalMessage("Check your inbox for confirmation!", false);
-        }
-      }
-      async function handleGoogleOAuth() {
-        showAuthLoader(true);
-        await supabaseClient.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo: location.origin, redirectMode: "same-tab" },
-        });
-      }
-      async function handleSignOut() {
-        await supabaseClient.auth.signOut();
-        localStorage.removeItem("cybersec_user");
-        updateUIForLoggedOutUser();
-      }
-
-      /* ========== 5. UI UPDATES ========== */
-      function updateUIForLoggedInUser(userData) {
-        const btn = $("#loginNavBtn");
-        if (!btn) return;
-        btn.innerHTML = `
-    <div style="position:relative;display:inline-block;">
-      <button class="btn-nav" id="userMenuBtn">
-        <i class="fas fa-user-circle"></i> ${
-          userData.user_metadata?.full_name || userData.email.split("@")[0]
-        }
-      </button>
-      <div id="userDropdown" style="display:none;position:absolute;right:0;top:100%;background:rgba(17,17,17,.95);border:1px solid rgba(0,255,65,.2);border-radius:8px;padding:.5rem 0;min-width:150px;z-index:1000;">
-        <a href="#" id="signOutBtn" style="display:block;padding:.5rem 1rem;color:var(--color-red);text-decoration:none;">Sign Out</a>
-      </div>
-    </div>`;
-        $("#userMenuBtn").addEventListener("click", (e) => {
-          e.stopPropagation();
-          $("#userDropdown").style.display =
-            $("#userDropdown").style.display === "block" ? "none" : "block";
-        });
-        document.addEventListener("click", (e) => {
-          if (
-            !e.target.closest("#userMenuBtn") &&
-            !e.target.closest("#userDropdown")
-          )
-            $("#userDropdown").style.display = "none";
-        });
-        $("#signOutBtn").addEventListener("click", (e) => {
-          e.preventDefault();
-          handleSignOut();
-        });
-        currentUser = userData;
-      }
-      function updateUIForLoggedOutUser() {
-        const btn = $("#loginNavBtn");
-        if (btn) {
-          btn.innerHTML = "Login / Signup";
-          btn.onclick = (e) => {
-            e.preventDefault();
-            openAuthModal();
-          };
-        }
-        currentUser = null;
-      }
-      function checkExistingLogin() {
-        try {
-          const stored = JSON.parse(localStorage.getItem("cybersec_user"));
-          if (
-            stored.loginTime &&
-            (Date.now() - new Date(stored.loginTime)) / 86400000 < 7
-          ) {
-            updateUIForLoggedInUser(stored);
-            return true;
-          }
-        } catch {
-          /* ignore */
-        }
-        updateUIForLoggedOutUser();
-        return false;
-      }
-
-      /* ========== 6. TYPING, TERMINAL, SCROLL, MUSIC, PINS ========== */
-      function initTyping() {
-        const el = $("#typing-text");
-        const phrases = [
-          "Learn with hands-on labs.",
-          "Taught by industry experts.",
-          "Become a certified professional.",
-        ];
-        let phraseIdx = 0,
-          charIdx = 0,
-          deleting = false;
-        function type() {
+  // --- PAGE ANIMATIONS & INTERACTIONS ---
+  function initTyping() {
+      const el = $("#typing-text");
+      if (!el) return;
+      const phrases = ["Learn with hands-on labs.", "Taught by industry experts.", "Become a certified professional."];
+      let phraseIdx = 0, charIdx = 0, deleting = false;
+      function type() {
           const current = phrases[phraseIdx];
           if (deleting) el.textContent = current.substring(0, --charIdx);
           else el.textContent = current.substring(0, ++charIdx);
           let speed = deleting ? 75 : 150;
-          if (!deleting && charIdx === current.length)
-            (speed = 2000), (deleting = true);
-          else if (deleting && charIdx === 0)
-            (deleting = false), (phraseIdx = (phraseIdx + 1) % phrases.length);
+          if (!deleting && charIdx === current.length) (speed = 2000), (deleting = true);
+          else if (deleting && charIdx === 0) (deleting = false), (phraseIdx = (phraseIdx + 1) % phrases.length);
           setTimeout(type, speed);
-        }
-        type();
       }
-      function initTerminal() {
-        const termBody = $("#terminal-body");
-        const cmds = [
-          {
-            cmd: "nmap -sS -A 10.10.1.5",
-            output:
-              "Starting Nmap scan...\nHost is up (0.021s latency).\nPORT    STATE SERVICE\n22/tcp  open  ssh\n80/tcp  open  http\n443/tcp open  https",
-            delay: 2000,
-          },
-          {
-            cmd: "hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://10.10.1.5",
-            output: '[ATTEMPT] - 1 password found: "password123"',
-            delay: 3000,
-          },
-          {
-            cmd: "ssh admin@10.10.1.5",
-            output: "Login successful. Welcome to the target machine.",
-            delay: 1500,
-          },
-          {
-            cmd: "cat /root/flag.txt",
-            output: "FLAG{CYB3R_AC4D3MY_R0CKS}",
-            delay: 2500,
-          },
-        ];
-        let cmdIdx = 0;
-        function run() {
+      type();
+  }
+  function initTerminal() {
+      const termBody = $("#terminal-body");
+      if (!termBody) return;
+      const cmds = [
+          { cmd: "nmap -sS -A 10.10.1.5", output: "Starting Nmap scan...\nHost is up (0.021s latency).\nPORT    STATE SERVICE\n22/tcp  open  ssh\n80/tcp  open  http\n443/tcp open  https", delay: 2000 },
+          { cmd: "hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://10.10.1.5", output: '[ATTEMPT] - 1 password found: "password123"', delay: 3000 },
+          { cmd: "ssh admin@10.10.1.5", output: "Login successful. Welcome to the target machine.", delay: 1500 },
+          { cmd: "cat /root/flag.txt", output: "FLAG{CYB3R_AC4D3MY_R0CKS}", delay: 2500 },
+      ];
+      let cmdIdx = 0;
+      function run() {
           if (cmdIdx >= cmds.length) {
-            cmdIdx = 0;
-            termBody.innerHTML = "";
+              cmdIdx = 0;
+              termBody.innerHTML = "";
           }
           const { cmd, output } = cmds[cmdIdx];
           const line = document.createElement("p");
           line.innerHTML = `<span class="prompt">root@lab:~# </span><span id="cmd-${cmdIdx}"></span><span class="command-cursor"></span>`;
           termBody.appendChild(line);
-          let i = 0,
-            t = setInterval(() => {
-              document.getElementById(`cmd-${cmdIdx}`).textContent += cmd[i++];
+          let i = 0, t = setInterval(() => {
+              $(`#cmd-${cmdIdx}`).textContent += cmd[i++];
               if (i === cmd.length) {
-                clearInterval(t);
-                line.querySelector(".command-cursor").remove();
-                setTimeout(() => {
-                  const out = document.createElement("p");
-                  out.innerHTML = `<span class="output">${output}</span>`;
-                  termBody.appendChild(out);
-                  termBody.scrollTop = termBody.scrollHeight;
-                  cmdIdx++;
-                  setTimeout(run, cmds[cmdIdx - 1].delay);
-                }, 500);
+                  clearInterval(t);
+                  line.querySelector(".command-cursor")?.remove();
+                  setTimeout(() => {
+                      const out = document.createElement("p");
+                      out.innerHTML = `<span class="output">${output}</span>`;
+                      termBody.appendChild(out);
+                      termBody.scrollTop = termBody.scrollHeight;
+                      cmdIdx++;
+                      setTimeout(run, cmds[cmdIdx - 1].delay);
+                  }, 500);
               }
-            }, 50);
-        }
-        run();
+          }, 50);
       }
-      function initScrollReveal() {
-        const obs = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((e) => {
-              if (e.isIntersecting) e.target.classList.add("visible");
-            });
-          },
-          { threshold: 0.5 }
-        );
-        $$(".section-title").forEach((t) => obs.observe(t));
+      run();
+  }
+  function initScrollReveal() {
+    const obs = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+            if (e.isIntersecting) e.target.classList.add("visible");
+        });
+    }, { threshold: 0.5 });
+    $$(".section-title").forEach((t) => obs.observe(t));
+  }
+  function initMusicPlayer(audioPlayer) {
+      const btnText = $("#music-button-text");
+      const icon = $("#music-icon");
+      const dd = $("#music-dropdown-content");
+      if (!btnText || !icon || !dd) return;
+      
+      function setUI(state) {
+          btnText.textContent = state === "Playing" ? "PAUSE MUSIC" : "STUDY MUSIC";
+          icon.className = state === "Playing" ? "fa-solid fa-circle-pause" : "fa-solid fa-music";
       }
-      function initMusicPlayer() {
-        const btnText = $("#music-button-text");
-        const icon = $("#music-icon");
-        const dd = $("#music-dropdown-content");
-        function setUI(state) {
-          btnText.textContent =
-            state === "Playing" ? "PAUSE MUSIC" : "STUDY MUSIC";
-          icon.className =
-            state === "Playing"
-              ? "fa-solid fa-circle-pause"
-              : "fa-solid fa-music";
-        }
-        const savedSrc = localStorage.getItem("cybersec_music_src");
-        const savedTime = parseFloat(
-          localStorage.getItem("cybersec_music_time") || 0
-        );
-        if (savedSrc) {
+      const savedSrc = localStorage.getItem("cybersec_music_src");
+      const savedTime = parseFloat(localStorage.getItem("cybersec_music_time") || 0);
+      if (savedSrc) {
           audioPlayer.src = savedSrc;
           audioPlayer.currentTime = savedTime;
-          audioPlayer
-            .play()
-            .then(() => setUI("Playing"))
-            .catch(() => setUI("Stopped"));
-        }
-        $("#music-dropdown button").addEventListener("click", (e) => {
+          audioPlayer.play().then(() => setUI("Playing")).catch(() => setUI("Stopped"));
+      }
+      $("#music-dropdown button").addEventListener("click", (e) => {
           e.stopPropagation();
           dd.style.display = dd.style.display === "block" ? "none" : "block";
-          if (audioPlayer.src && !audioPlayer.paused)
-            audioPlayer.pause(), setUI("Stopped");
-          else if (audioPlayer.src)
-            audioPlayer.play().then(() => setUI("Playing"));
-        });
-        dd.querySelectorAll("a[data-src]").forEach((a) => {
+          if (audioPlayer.src && !audioPlayer.paused) {
+              audioPlayer.pause();
+              setUI("Stopped");
+          } else if (audioPlayer.src) {
+              audioPlayer.play().then(() => setUI("Playing"));
+          }
+      });
+      dd.querySelectorAll("a[data-src]").forEach((a) => {
           a.addEventListener("click", (e) => {
-            e.preventDefault();
-            audioPlayer.src = a.dataset.src;
-            audioPlayer.play().then(() => setUI("Playing"));
-            localStorage.setItem("cybersec_music_src", a.dataset.src);
-            dd.style.display = "none";
+              e.preventDefault();
+              audioPlayer.src = a.dataset.src;
+              audioPlayer.play().then(() => setUI("Playing"));
+              localStorage.setItem("cybersec_music_src", a.dataset.src);
+              dd.style.display = "none";
           });
-        });
-        $("#stop-music-link").addEventListener("click", (e) => {
+      });
+      $("#stop-music-link").addEventListener("click", (e) => {
           e.preventDefault();
           audioPlayer.pause();
           audioPlayer.currentTime = 0;
@@ -1343,340 +1269,203 @@
           localStorage.removeItem("cybersec_music_src");
           localStorage.removeItem("cybersec_music_time");
           dd.style.display = "none";
-        });
-        window.addEventListener("beforeunload", () => {
+      });
+      window.addEventListener("beforeunload", () => {
           if (!audioPlayer.paused && audioPlayer.src) {
-            localStorage.setItem("cybersec_music_src", audioPlayer.src);
-            localStorage.setItem(
-              "cybersec_music_time",
-              audioPlayer.currentTime
-            );
+              localStorage.setItem("cybersec_music_src", audioPlayer.src);
+              localStorage.setItem("cybersec_music_time", audioPlayer.currentTime);
           }
-        });
-        window.addEventListener("click", (e) => {
+      });
+      window.addEventListener("click", (e) => {
           if (!e.target.closest("#music-dropdown")) dd.style.display = "none";
-        });
+      });
+  }
+  function initPinsAndParallax() {
+      function updatePINs() {
+          $$(".pin-block").forEach(b => (b.textContent = Math.floor(Math.random() * 10000).toString().padStart(4, "0")));
       }
-      function initPinsAndParallax() {
-        function updatePINs() {
-          $$(".pin-block").forEach(
-            (b) =>
-              (b.textContent = Math.floor(Math.random() * 10000)
-                .toString()
-                .padStart(4, "0"))
-          );
-        }
-        setInterval(updatePINs, 200);
-        updatePINs();
-        document.addEventListener("mousemove", (e) => {
-          const x = e.clientX / innerWidth - 0.5;
-          const y = e.clientY / innerHeight - 0.5;
-          const gear = $(".gear");
-          const fp = $(".fingerprint-container");
-          if (gear)
-            gear.style.transform = `rotate(${Date.now() * 0.06}deg) translate(${
-              x * 3
-            }px,${y * 3}px)`;
-          if (fp) fp.style.transform = `translate(${x * 2}px,${y * 2}px)`;
-        });
-      }
-
-      /* ========== 7. DOM READY ========== */
-      document.addEventListener("DOMContentLoaded", () => {
-        let currentUser = null;
-    let audioPlayer = new Audio();
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-        initTyping();
-        initTerminal();
-        initScrollReveal();
-        initMusicPlayer();
-        initPinsAndParallax();
-
-        $("#loginNavBtn").addEventListener("click", (e) => {
-          e.preventDefault();
-          openAuthModal();
-        });
-        $("#closeAuthModal").addEventListener("click", closeAuthModal);
-        $("#authModal").addEventListener("click", (e) => {
-          if (e.target === $("#authModal")) closeAuthModal();
-        });
-
-        const tabIn = $("#tabSignIn");
-        const tabUp = $("#tabSignUp");
-        const formIn = $("#signInForm");
-        const formUp = $("#signUpForm");
-        [tabIn, tabUp].forEach((t) =>
-          t.addEventListener("click", () => {
-            tabIn.classList.toggle("active", t === tabIn);
-            tabUp.classList.toggle("active", t === tabUp);
-            formIn.style.display = t === tabIn ? "block" : "none";
-            formUp.style.display = t === tabUp ? "block" : "none";
-          })
-        );
-
-        $("#emailSignInForm")?.addEventListener("submit", handleEmailSignIn);
-        $("#emailSignUpForm")?.addEventListener("submit", handleEmailSignUp);
-        $$("#googleSignIn, #googleSignUp").forEach((btn) =>
+      setInterval(updatePINs, 200);
+      updatePINs();
+  }
+  function initFaq() {
+      $$(".faq-item").forEach((item) => {
+          const question = item.querySelector(".faq-question");
+          question.addEventListener("click", () => {
+              const isActive = item.classList.contains("active");
+              $$(".faq-item").forEach(otherItem => otherItem.classList.remove("active"));
+              if (!isActive) item.classList.add("active");
+          });
+      });
+  }
+  function initDropdowns() {
+      $$(".dropdown-toggle").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            handleGoogleOAuth();
-          })
-        );
-         (async () => {
-        const { data, error } = await supabaseClient.auth.getSession();
-        if (error) console.error("OAuth error:", error.message);
-        else if (data.session) {
-          localStorage.setItem(
-            "cybersec_user",
-            JSON.stringify({
-              id: data.session.user.id,
-              email: data.session.user.email,
-              name:
-                data.session.user.user_metadata?.full_name ||
-                data.session.user.email.split("@")[0],
-              loginTime: new Date().toISOString(),
-            })
-          );
-          updateUIForLoggedInUser(data.session.user);
-        }
-      })();
+              e.stopPropagation();
+              btn.closest(".nav-dropdown").classList.toggle("open-on-click");
+          });
       });
-      window.addEventListener("load", () => {
-        const musicBtn = document.querySelector("#music-dropdown");
-        if (musicBtn) {
-          const indicator = document.createElement("div");
-          indicator.className = "music-indicator";
-          indicator.innerHTML = `<i class="fa-solid fa-music"></i> Try Study Music!`;
+      document.addEventListener("click", () => $$(".nav-dropdown.open-on-click").forEach((d) => d.classList.remove("open-on-click")));
+  }
+  function initMobileMenu() {
+      const header = $("#main-header");
+      const nav = header?.querySelector("nav");
+      if (!header || !nav) return;
 
-          // Position relative to parent
-          musicBtn.style.position = "relative";
-          musicBtn.appendChild(indicator);
-
-          // Remove after 6 seconds
-          setTimeout(() => indicator.remove(), 3000);
-        }
-      });
-      // Add this to your existing JavaScript
-
-      // Mobile Menu Toggle Function
-      function initMobileMenu() {
-        // Add mobile menu button to header
-        const header = document.getElementById("main-header");
-        const nav = header.querySelector("nav");
-
-        // Create mobile menu button if it doesn't exist
-        if (!document.querySelector(".mobile-menu-toggle")) {
+      if (!$(".mobile-menu-toggle")) {
           const mobileMenuBtn = document.createElement("button");
           mobileMenuBtn.className = "mobile-menu-toggle";
           mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
           mobileMenuBtn.setAttribute("aria-label", "Toggle mobile menu");
+          
+          const headerControls = $(".header-controls");
+          headerControls?.parentNode.insertBefore(mobileMenuBtn, headerControls);
 
-          // Insert before header controls
-          const headerControls = document.querySelector(".header-controls");
-          headerControls.parentNode.insertBefore(mobileMenuBtn, headerControls);
-
-          // Add click event listener
           mobileMenuBtn.addEventListener("click", function () {
-            nav.classList.toggle("active");
-
-            // Change icon
-            const icon = this.querySelector("i");
-            if (nav.classList.contains("active")) {
-              icon.className = "fas fa-times";
-              this.setAttribute("aria-expanded", "true");
-            } else {
-              icon.className = "fas fa-bars";
-              this.setAttribute("aria-expanded", "false");
-            }
+              nav.classList.toggle("active");
+              const icon = this.querySelector("i");
+              if (nav.classList.contains("active")) {
+                  icon.className = "fas fa-times";
+                  this.setAttribute("aria-expanded", "true");
+              } else {
+                  icon.className = "fas fa-bars";
+                  this.setAttribute("aria-expanded", "false");
+              }
           });
-        }
-
-        // Close mobile menu when clicking nav links
-        nav.querySelectorAll("a").forEach((link) => {
-          link.addEventListener("click", function () {
-            nav.classList.remove("active");
-            const mobileBtn = document.querySelector(".mobile-menu-toggle");
-            if (mobileBtn) {
-              mobileBtn.querySelector("i").className = "fas fa-bars";
-              mobileBtn.setAttribute("aria-expanded", "false");
-            }
-          });
-        });
-
-        // Close mobile menu when clicking outside
-        document.addEventListener("click", function (e) {
-          if (!e.target.closest("#main-header")) {
-            nav.classList.remove("active");
-            const mobileBtn = document.querySelector(".mobile-menu-toggle");
-            if (mobileBtn) {
-              mobileBtn.querySelector("i").className = "fas fa-bars";
-              mobileBtn.setAttribute("aria-expanded", "false");
-            }
-          }
-        });
       }
-
-      // Mobile-specific optimizations
-      function initMobileOptimizations() {
-        // Prevent zoom on form inputs (iOS)
-        const inputs = document.querySelectorAll("input, textarea, select");
-        inputs.forEach((input) => {
-          if (window.innerWidth <= 768) {
-            input.style.fontSize = "16px";
-          }
-        });
-
-        // Add touch feedback
-        const touchElements = document.querySelectorAll(
-          ".btn, .course-card, .social-links a"
-        );
-        touchElements.forEach((element) => {
-          element.addEventListener("touchstart", function () {
-            this.style.opacity = "0.8";
+      nav.querySelectorAll("a").forEach(link => {
+          link.addEventListener("click", () => {
+              nav.classList.remove("active");
+              const mobileBtn = $(".mobile-menu-toggle");
+              if (mobileBtn) {
+                  mobileBtn.querySelector("i").className = "fas fa-bars";
+                  mobileBtn.setAttribute("aria-expanded", "false");
+              }
           });
-
-          element.addEventListener("touchend", function () {
-            setTimeout(() => {
-              this.style.opacity = "1";
-            }, 150);
-          });
-        });
-
-        // Optimize video for mobile
-        const heroVideo = document.getElementById("hero-video");
-        if (heroVideo && window.innerWidth <= 768) {
-          heroVideo.style.display = "none"; // Hide video on mobile to save bandwidth
-        }
-
-        // Smooth scroll behavior for mobile
-        document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach((anchor) => {
-          anchor.addEventListener("click", function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute("href"));
-            if (target) {
-              target.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-              });
-            }
-          });
-        });
-      }
-
-      // Viewport height fix for mobile browsers
-      function fixMobileViewport() {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty("--vh", `${vh}px`);
-
-        // Update on resize/orientation change
-        window.addEventListener("resize", () => {
-          const vh = window.innerHeight * 0.01;
-          document.documentElement.style.setProperty("--vh", `${vh}px`);
-        });
-      }
-
-      // Add to your existing DOMContentLoaded event listener
-      document.addEventListener("DOMContentLoaded", () => {
-        // Your existing code...
-
-        // Add mobile-specific initialization
-        initMobileMenu();
-        initMobileOptimizations();
-        fixMobileViewport();
       });
-
-      // Optional: Add resize event listener for dynamic adjustments
-      window.addEventListener("resize", () => {
-        // Re-initialize mobile features if switching between mobile/desktop
-        if (window.innerWidth <= 768) {
-          initMobileOptimizations();
-        }
-      });
-      /* 3. Tiny toggle script – run once, e.g. in a <script> tag at the bottom of the page */
-      document.querySelectorAll(".dropdown-toggle").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation(); // don’t bubble to body
-          btn.closest(".nav-dropdown").classList.toggle("open-on-click");
-        });
-      });
-
-      /* 4. Optional: close on outside click */
-      document.addEventListener("click", () =>
-        document
-          .querySelectorAll(".nav-dropdown.open-on-click")
-          .forEach((d) => d.classList.remove("open-on-click"))
-      );
-      document.addEventListener("DOMContentLoaded", function () {
-        const faqItems = document.querySelectorAll(".faq-item");
-
-        faqItems.forEach((item) => {
-          const question = item.querySelector(".faq-question");
-          question.addEventListener("click", () => {
-            const isActive = item.classList.contains("active");
-
-            // Close all FAQ items
-            faqItems.forEach((otherItem) => {
-              otherItem.classList.remove("active");
-            });
-
-            // Toggle current item
-            if (!isActive) {
-              item.classList.add("active");
-            }
+  }
+  function initializeIntroCounters() {
+      const counters = $$('.intro-stat-number');
+      const observer = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                  const counter = entry.target;
+                  const target = +counter.getAttribute('data-target');
+                  const duration = 2000;
+                  const stepTime = 20;
+                  const steps = duration / stepTime;
+                  const increment = target / steps;
+                  let current = 0;
+                  const updateCounter = () => {
+                      current += increment;
+                      if (current < target) {
+                          counter.textContent = Math.floor(current);
+                          setTimeout(updateCounter, stepTime);
+                      } else {
+                          counter.textContent = target;
+                      }
+                  };
+                  updateCounter();
+                  observer.unobserve(counter); // Animate only once
+              }
           });
-        });
-      });
-      /* ----------  Testimonial slider – only runs if elements exist  ---------- */
-      const testimonialSlides = document.querySelectorAll(".testimonial-slide");
-      const testimonialDots = document.querySelectorAll(".nav-dot");
+      }, { threshold: 0.8 });
 
-      if (testimonialSlides.length && testimonialDots.length) {
-        testimonialDots.forEach((dot, idx) => {
-          dot.addEventListener("click", () => {
-            testimonialDots.forEach((d) => d.classList.remove("active"));
-            testimonialSlides.forEach((s) => s.classList.remove("active"));
-            dot.classList.add("active");
-            testimonialSlides[idx].classList.add("active");
-          });
-        });
+      counters.forEach(counter => observer.observe(counter));
+  }
 
-        let currentSlide = 0;
-        setInterval(() => {
-          testimonialDots.forEach((d) => d.classList.remove("active"));
-          testimonialSlides.forEach((s) => s.classList.remove("active"));
-          currentSlide = (currentSlide + 1) % testimonialSlides.length;
-          testimonialDots[currentSlide].classList.add("active");
-          testimonialSlides[currentSlide].classList.add("active");
-        }, 5000);
-      }
-      // Introduction Section Counter Animation
-function initializeIntroCounters() {
-    const counters = document.querySelectorAll('.intro-stat-number');
-    
-    counters.forEach(counter => {
-        const target = parseInt(counter.getAttribute('data-target'));
-        const increment = target / 100;
-        let current = 0;
-        
-        const updateCounter = () => {
-            if (current < target) {
-                current += increment;
-                counter.textContent = Math.floor(current);
-                setTimeout(updateCounter, 20);
-            } else {
-                counter.textContent = target;
-            }
-        };
-        
-        setTimeout(updateCounter, 2500);
-    });
-}
 
-// Initialize when DOM loads
-document.addEventListener('DOMContentLoaded', function() {
+  /* ========== 3. DOMContentLoaded INITIALIZER ========== */
+  document.addEventListener("DOMContentLoaded", () => {
+    // --- Initialize state variables ---
+    let currentUser = null;
+    const audioPlayer = new Audio();
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // --- Call initialization functions ---
+    initTyping();
+    initTerminal();
+    initScrollReveal();
+    initMusicPlayer(audioPlayer); // Pass the audio player instance
+    initPinsAndParallax();
+    initFaq();
+    initDropdowns();
+    initMobileMenu();
     initializeIntroCounters();
-});
-    </script>
+    
+    // --- Attach event listeners ---
+    $("#loginNavBtn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      openAuthModal();
+    });
+    $("#closeAuthModal")?.addEventListener("click", closeAuthModal);
+    $("#authModal")?.addEventListener("click", (e) => {
+      if (e.target === $("#authModal")) closeAuthModal();
+    });
+
+    const tabIn = $("#tabSignIn"), tabUp = $("#tabSignUp");
+    const formIn = $("#signInForm"), formUp = $("#signUpForm");
+    [tabIn, tabUp].forEach(t => t?.addEventListener("click", () => {
+      tabIn.classList.toggle("active", t === tabIn);
+      tabUp.classList.toggle("active", t === tabUp);
+      formIn.style.display = t === tabIn ? "block" : "none";
+      formUp.style.display = t === tabUp ? "block" : "none";
+    }));
+
+    $("#emailSignInForm")?.addEventListener("submit", (e) => handleEmailSignIn(e, supabaseClient));
+    $("#emailSignUpForm")?.addEventListener("submit", (e) => handleEmailSignUp(e, supabaseClient));
+    $$("#googleSignIn, #googleSignUp").forEach(btn => btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        handleGoogleOAuth(supabaseClient);
+    }));
+
+    // --- Check for existing login or OAuth redirect ---
+    (async () => {
+        const { data, error } = await supabaseClient.auth.getSession();
+        if (error) {
+            console.error("Auth session error:", error.message);
+            updateUIForLoggedOutUser();
+        } else if (data.session) {
+            localStorage.setItem("cybersec_user", JSON.stringify({
+                id: data.session.user.id,
+                email: data.session.user.email,
+                name: data.session.user.user_metadata?.full_name || data.session.user.email.split("@")[0],
+                loginTime: new Date().toISOString(),
+            }));
+            updateUIForLoggedInUser(data.session.user);
+        } else {
+            // Check for older localStorage login if no session
+            try {
+                const stored = JSON.parse(localStorage.getItem("cybersec_user"));
+                if (stored && (Date.now() - new Date(stored.loginTime)) / 86400000 < 7) {
+                    updateUIForLoggedInUser(stored);
+                } else {
+                    updateUIForLoggedOutUser();
+                }
+            } catch {
+                updateUIForLoggedOutUser();
+            }
+        }
+    })();
+  });
+
+  /* ========== 4. WINDOW LOAD EVENTS (for non-critical UI) ========== */
+  window.addEventListener("load", () => {
+      const musicBtn = $("#music-dropdown");
+      if (musicBtn && !localStorage.getItem("music_indicator_shown")) {
+          const indicator = document.createElement("div");
+          indicator.className = "music-indicator";
+          indicator.innerHTML = `<i class="fa-solid fa-music"></i> Try Study Music!`;
+          musicBtn.style.position = "relative";
+          musicBtn.appendChild(indicator);
+          setTimeout(() => {
+              indicator.style.transition = "opacity 0.5s ease";
+              indicator.style.opacity = "0";
+              setTimeout(() => indicator.remove(), 500);
+          }, 5000);
+          localStorage.setItem("music_indicator_shown", "true");
+      }
+  });
+</script>
     <div id="music-indicator" style="display: none">
       🎵 Click here for Study Music!
     </div>
